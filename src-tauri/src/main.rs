@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use tauri::{Manager};
 use clui::cli::{Descriptor, Projects, ProjectId, Project};
 
@@ -19,7 +20,7 @@ async fn main() {
     )));
   });
 
-  tauri::Builder::default()
+  let app = tauri::Builder::default()
     .setup(|app| {
       #[cfg(debug_assertions)]
       {
@@ -34,6 +35,23 @@ async fn main() {
       clui::commands::spawn,
       clui::commands::stop
     ])
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .build(tauri::generate_context!())
+    .expect("error while building tauri application");
+
+  app.run(|app_handle, e| {
+    match  e {
+      tauri::RunEvent::ExitRequested  { api, ..} => {
+        let state = app_handle.state::<Projects>();
+        println!("***Stopping running projects");
+        for (_, project) in state.iter() {
+          if project.is_running.load(Ordering::Relaxed) {
+            project.stop();
+          }
+        }
+        ()
+      },
+      _ => ()
+    }
+
+    });
 }
