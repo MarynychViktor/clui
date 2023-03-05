@@ -12,3 +12,40 @@ pub struct ProjectDto {
   pub workdir: String,
   pub is_running: bool,
 }
+
+#[tauri::command]
+pub fn initialize(projects: tauri::State<'_, Projects>) -> Vec<ProjectDto> {
+  projects.iter().map(|(a, b)| {
+    ProjectDto {
+      id: a.clone(),
+      name: b.name.clone(),
+      executable: b.executable.clone(),
+      workdir: b.workdir.clone(),
+      is_running: b.is_running.load(Ordering::Relaxed),
+    }
+  })
+    .collect()
+}
+
+#[tauri::command]
+pub async fn spawn(id: ProjectId, projects: tauri::State<'_, Projects>, window: Window) -> Result<(), ()> {
+  let project = projects.get(&id).unwrap().clone();
+
+  let handle = Handle::current();
+  let mut receiver = project.spawn();
+
+  std::thread::spawn(move || {
+    handle.spawn(async move {
+      window.emit("events", ApplicationEvent::Start(id)).unwrap();
+
+      while let Some(data) = receiver.recv().await {
+        println!("Data received {}", data);
+        window.emit("events", ApplicationEvent::Data(id, data)).unwrap();
+      }
+
+      window.emit("events", ApplicationEvent::Exit(id)).unwrap();
+    });
+  });
+
+  Ok(())
+}

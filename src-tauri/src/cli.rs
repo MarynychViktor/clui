@@ -64,8 +64,8 @@ impl Project {
       .spawn().unwrap();
 
     let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
     let (tx, mut rx) = mpsc::unbounded_channel();
-    let reader = tokio::io::BufReader::new(stdout);
     let is_running = self.is_running.clone();
 
     tokio::spawn(async move {
@@ -92,12 +92,22 @@ impl Project {
     });
     let is_running = self.is_running.clone();
 
+    let stdout_tx = tx.clone();
     tokio::spawn(async move {
       is_running.store(true, Ordering::SeqCst);
+      let mut lines = tokio::io::BufReader::new(stdout).lines();
 
-      let mut lines = reader.lines();
       while let Some(line) = lines.next_line().await.unwrap() {
-        tx.send(line).expect("Failed to send a message");
+        stdout_tx.send(line).expect("Failed to send a message");
+      }
+    });
+
+    let stderr_tx = tx.clone();
+    tokio::spawn(async move {
+      let mut lines = tokio::io::BufReader::new(stderr).lines();
+
+      while let Some(line) = lines.next_line().await.unwrap() {
+        stderr_tx.send(line).expect("Failed to send a message");
       }
     });
 

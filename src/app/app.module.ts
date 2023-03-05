@@ -4,10 +4,11 @@ import { BrowserModule } from "@angular/platform-browser";
 import { AppComponent } from "./app.component";
 import { CliService } from "./cli.service";
 import { invoke } from "@tauri-apps/api/tauri";
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule],
+  imports: [BrowserModule, BrowserAnimationsModule],
   providers: [
     {
       provide: APP_INITIALIZER,

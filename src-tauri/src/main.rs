@@ -4,7 +4,6 @@
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use tauri::{Manager, Window};
-use tokio::runtime::Handle;
 use clui::cli::{Descriptor, Projects, ProjectId, Project};
 use clui::commands::{ProjectDto};
 use clui::event::ApplicationEvent;
@@ -19,43 +18,6 @@ enum Event {
   Start(ProjectId),
   Data(ProjectId, String),
   Exit(ProjectId),
-}
-
-#[tauri::command]
-fn initialize(projects: tauri::State<'_, Projects>) -> Vec<ProjectDto> {
-  projects.iter().map(|(a, b)| {
-    ProjectDto {
-      id: a.clone(),
-      name: b.name.clone(),
-      executable: b.executable.clone(),
-      workdir: b.workdir.clone(),
-      is_running: b.is_running.load(Ordering::Relaxed),
-    }
-  })
-    .collect()
-}
-
-#[tauri::command]
-async fn spawn(id: ProjectId, projects: tauri::State<'_, Projects>, window: Window) -> Result<(), ()> {
-  let project = projects.get(&id).unwrap().clone();
-
-  let handle = Handle::current();
-  let mut receiver = project.spawn();
-
-  std::thread::spawn(move || {
-    handle.spawn(async move {
-      window.emit("events", ApplicationEvent::Start(id)).unwrap();
-
-      while let Some(data) = receiver.recv().await {
-        println!("Data received {}", data);
-        window.emit("events", ApplicationEvent::Data(id, data)).unwrap();
-      }
-
-      window.emit("events", ApplicationEvent::Exit(id)).unwrap();
-    });
-  });
-
-  Ok(())
 }
 
 #[tokio::main]
@@ -79,7 +41,7 @@ async fn main() {
       Ok(())
     })
     .manage(projects)
-    .invoke_handler(tauri::generate_handler![initialize, spawn])
+    .invoke_handler(tauri::generate_handler![clui::commands::initialize, clui::commands::spawn])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
