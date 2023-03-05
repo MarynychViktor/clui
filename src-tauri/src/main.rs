@@ -41,7 +41,11 @@ async fn main() {
       Ok(())
     })
     .manage(projects)
-    .invoke_handler(tauri::generate_handler![clui::commands::initialize, clui::commands::spawn])
+    .invoke_handler(tauri::generate_handler![
+      clui::commands::initialize,
+      clui::commands::spawn,
+      clui::commands::stop
+    ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

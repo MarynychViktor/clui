@@ -1,20 +1,50 @@
-<div class="container">
-  <h1>Welcome to Tauri + Angular!</h1>
-  <div class="row">
-    <a href="https://tauri.app" target="_blank">
-      <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-    </a>
-    <a href="https://angular.io" target="_blank">
-      <img src="/assets/angular.svg" class="logo angular" alt="Angular logo" />
-    </a>
+<!--<mat-drawer-container class="example-container" [hasBackdrop]="false">-->
+<!--  <mat-drawer #drawer mode="push">I'm a drawer</mat-drawer>-->
+<!--  <mat-drawer-content>-->
+<!--    <div [style]="{height: '100vh'}">-->
+<!--      <button mat-raised-button (click)="drawer.toggle()">Toggle drawer</button>-->
+<!--    </div>-->
+<!--  </mat-drawer-content>-->
+<!--</mat-drawer-container>-->
+
+<div class="layout-container">
+  <div class="layout-sidenav">
+    Sidenav
+    <div>
+      <div *ngFor="let project of projectService.processes | async">
+        <div>
+          {{ project.name }} - {{ project.isRunning ? 'running' : 'not running' }}
+        </div>
+        <div>
+
+          <button class="mat-elevation-z0"
+                  color="primary"
+                  mat-icon-button
+                  [disabled]="project.isRunning"
+                  (click)="spawn(project)"
+          >
+            <mat-icon >play_circle</mat-icon>
+          </button>
+          <button class="mat-elevation-z0"
+                  color="accent"
+                  mat-icon-button
+          >
+            <mat-icon >replay_circle_filled</mat-icon>
+          </button>
+          <button class="mat-elevation-z0"
+                  color="warn"
+                  mat-icon-button
+                  [disabled]="!project.isRunning"
+                  (click)="stop(project)"
+          >
+            <mat-icon color="warn">stop_circle</mat-icon>
+          </button>
+        </div>
+<!--        <button mat-button (click)="spawn(project)">Spawn</button>-->
+      </div>
+    </div>
   </div>
-  <div>
-    <ul>
-      <li *ngFor="let process of projectService.processes">
-        <span>Name: {{ process.name }}</span>
-        <span>Id: {{ process.id }}</span>
-        <button (click)="spawn(process)">Spawn</button>
-      </li>
-    </ul>
+  <div class="layout-content" style="width: 100%">
+    <div id="term" style="height: 100%; width: 100%"></div>
   </div>
 </div>

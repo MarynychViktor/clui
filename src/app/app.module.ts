@@ -5,10 +5,14 @@ import { AppComponent } from "./app.component";
 import { CliService } from "./cli.service";
 import { invoke } from "@tauri-apps/api/tauri";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
+import { NgTerminalModule } from "ng-terminal";
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule, BrowserAnimationsModule],
+  imports: [BrowserModule, BrowserAnimationsModule, MatSidenavModule, MatButtonModule, MatIconModule, NgTerminalModule],
   providers: [
     {
       provide: APP_INITIALIZER,

@@ -39,7 +39,7 @@ pub async fn spawn(id: ProjectId, projects: tauri::State<'_, Projects>, window: 
       window.emit("events", ApplicationEvent::Start(id)).unwrap();
 
       while let Some(data) = receiver.recv().await {
-        println!("Data received {}", data);
+        // println!("Data received {}", data);
         window.emit("events", ApplicationEvent::Data(id, data)).unwrap();
       }
 
@@ -48,4 +48,12 @@ pub async fn spawn(id: ProjectId, projects: tauri::State<'_, Projects>, window: 
   });
 
   Ok(())
+}
+
+#[tauri::command]
+pub fn stop(id: ProjectId, projects: tauri::State<'_, Projects>) {
+  let project = projects.get(&id).unwrap().clone();
+  println!("Stop cmd called {:?}", project.name);
+  project.stop();
+
 }

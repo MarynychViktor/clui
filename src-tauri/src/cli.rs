@@ -44,7 +44,7 @@ const PROCESS_DELAY: u64 = 100;
 
 impl Project {
   pub fn spawn(self: Arc<Self>) -> UnboundedReceiver<String> {
-    let (can_tx, mut can_rx) = mpsc::channel::<()>(1);
+    let (can_tx, mut can_rx) = mpsc::channel::<()>(12);
     {
       *self.cancel_tx.lock().unwrap() = Some(can_tx);
     }
@@ -67,13 +67,29 @@ impl Project {
     let stderr = child.stderr.take().unwrap();
     let (tx, mut rx) = mpsc::unbounded_channel();
     let is_running = self.is_running.clone();
-
+    //
+    // tokio::spawn(async move {
+    //   println!("Waiting for project due to the request");
+    //   while let Some(x) = can_rx.recv().await {
+    //     println!("Received someting from can_rx.recv()");
+    //   }
+    //   println!("Exited endind channel waiter");
+    //
+    //   is_running.store(false, Ordering::SeqCst);
+    //   // child.wait().await
+    //   //   .expect("child process encountered an error");
+    //
+    // });
+    // tokio::spawn(async move {
+    //    child.wait().await
+    // });
     tokio::spawn(async move {
       select! {
         _ = child.wait() => {
-          println!("Canceling project due to exit")
+          println!("Exited from project gracefully")
         }
         _ = can_rx.recv() => {
+          println!("Force canceled project");
           match child.try_wait() {
             Ok(Some(_)) => {},
             _ => {
@@ -81,7 +97,6 @@ impl Project {
               child.wait().await;
             }
           }
-          println!("Canceling project due to the request")
         }
       }
 
@@ -115,9 +130,16 @@ impl Project {
   }
 
   pub fn stop(&self) {
-    match &*self.cancel_tx.lock().unwrap() {
+    let sender = {
+      self.cancel_tx.lock().unwrap().take()
+    };
+
+    match sender {
       Some(x) => {
-        x.send(());
+        println!("Send to stop sender");
+        tokio::spawn(async move {
+          x.send(()).await.unwrap();
+        });
       },
       None => {
         println!("Failed to stop project, sender is missing")
