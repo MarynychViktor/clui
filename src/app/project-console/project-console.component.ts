@@ -1,9 +1,9 @@
-import { AfterViewInit, Component, NgZone, OnInit } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { ProjectService } from "../project.service";
 import { WebglAddon } from "xterm-addon-webgl";
-import { debounce, interval, merge, Subject, Subscription, switchMap, tap, throttle } from "rxjs";
+import { debounce, interval, map, merge, Subject, Subscription, switchMap, tap, throttle } from "rxjs";
 import { ActivatedRoute } from "@angular/router";
 
 @Component({
@@ -11,7 +11,7 @@ import { ActivatedRoute } from "@angular/router";
   templateUrl: './project-console.component.html',
   styleUrls: ['./project-console.component.sass']
 })
-export class ProjectConsoleComponent implements OnInit, AfterViewInit {
+export class ProjectConsoleComponent implements AfterViewInit {
   term = new Terminal();
   fitAddon?: FitAddon;
   webglAddon?: WebglAddon;
@@ -20,8 +20,7 @@ export class ProjectConsoleComponent implements OnInit, AfterViewInit {
 
   constructor(
     readonly projectService: ProjectService,
-    private route: ActivatedRoute,
-    private zone: NgZone
+    private route: ActivatedRoute
   ) {
     this.term = new Terminal();
     this.fitAddon = new FitAddon();
@@ -32,21 +31,15 @@ export class ProjectConsoleComponent implements OnInit, AfterViewInit {
     this.webglAddon.activate(this.term);
   }
 
-
-  async ngOnInit() {
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      console.log('params ', params, 'id', id);
-    });
-  }
-
   ngAfterViewInit(){
     this.term.open(document.getElementById('term') as HTMLElement);
     window.onresize = () => { this.resize.next(null) };
     this.term.onResize((evt) => this.fitAddon?.fit());
 
     this.route.params.pipe(
-      switchMap((params) => this.projectService.projectSource(parseInt(params['id']))),
+      map((params) => parseInt(params['id'])),
+      tap((id) => this.projectService.activeProject = id),
+      switchMap((id) => this.projectService.projectSource(id)),
       // todo: config
       debounce(() => interval(200)),
       throttle(() => interval(200)),

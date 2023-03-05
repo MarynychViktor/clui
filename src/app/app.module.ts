@@ -12,6 +12,10 @@ import { NgTerminalModule } from "ng-terminal";
 import { ProjectsComponent } from './projects/projects.component';
 import { ProjectConsoleComponent } from './project-console/project-console.component';
 import { RouterModule } from "@angular/router";
+import { MatListModule } from "@angular/material/list";
+import { MatRippleModule } from "@angular/material/core";
+import { MatProgressBarModule } from "@angular/material/progress-bar";
+import { MatBadgeModule } from "@angular/material/badge";
 
 @NgModule({
   declarations: [AppComponent, ProjectsComponent, ProjectConsoleComponent],
@@ -25,21 +29,19 @@ import { RouterModule } from "@angular/router";
     RouterModule.forRoot([
       {
         path: '',
-        component: AppComponent,
+        component: ProjectsComponent,
         children: [
           {
-            path: '',
-            component: ProjectsComponent,
-            children: [
-              {
-                path: ':id',
-                component: ProjectConsoleComponent
-              }
-            ]
+            path: ':id',
+            component: ProjectConsoleComponent
           }
         ]
       }
     ]),
+    MatListModule,
+    MatRippleModule,
+    MatProgressBarModule,
+    MatBadgeModule,
   ],
   providers: [
     {

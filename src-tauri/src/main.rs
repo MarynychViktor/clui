@@ -2,23 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
-use tauri::{Manager, Window};
+use tauri::{Manager};
 use clui::cli::{Descriptor, Projects, ProjectId, Project};
-use clui::commands::{ProjectDto};
-use clui::event::ApplicationEvent;
-
-#[derive(Clone, serde::Serialize)]
-struct Payload {
-  message: String,
-}
-
-#[derive(Clone, serde::Serialize)]
-enum Event {
-  Start(ProjectId),
-  Data(ProjectId, String),
-  Exit(ProjectId),
-}
 
 #[tokio::main]
 async fn main() {
@@ -36,8 +21,11 @@ async fn main() {
 
   tauri::Builder::default()
     .setup(|app| {
-      let main_window = app.get_window("main").unwrap();
-      main_window.open_devtools();
+      #[cfg(debug_assertions)]
+      {
+        let main_window = app.get_window("main").unwrap();
+        main_window.open_devtools();
+      }
       Ok(())
     })
     .manage(projects)

@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-use std::os::unix::io::FromRawFd;
 use std::process::Stdio;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
 use serde::Deserialize;
-use tokio::process::{Child, Command};
+use tokio::process::{Command};
 use tokio::sync::{mpsc};
 use tokio::sync::mpsc::{Sender, UnboundedReceiver};
 use tokio::io::AsyncBufReadExt;
@@ -40,18 +39,12 @@ impl Project {
 pub type ProjectId = i16;
 pub type Projects = HashMap<ProjectId, Arc<Project>>;
 
-const PROCESS_DELAY: u64 = 100;
-
 impl Project {
   pub fn spawn(self: Arc<Self>) -> UnboundedReceiver<String> {
     let (can_tx, mut can_rx) = mpsc::channel::<()>(12);
     {
       *self.cancel_tx.lock().unwrap() = Some(can_tx);
     }
-
-    let stderr_io = unsafe {
-      Stdio::from_raw_fd(2)
-    };
 
     let mut child = Command::new("/bin/bash")
       .kill_on_drop(true)
@@ -65,7 +58,7 @@ impl Project {
 
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
-    let (tx, mut rx) = mpsc::unbounded_channel();
+    let (tx, rx) = mpsc::unbounded_channel();
     let is_running = self.is_running.clone();
     //
     // tokio::spawn(async move {
@@ -93,8 +86,8 @@ impl Project {
           match child.try_wait() {
             Ok(Some(_)) => {},
             _ => {
-              child.kill().await;
-              child.wait().await;
+              child.kill().await.unwrap();
+              child.wait().await.unwrap();
             }
           }
         }

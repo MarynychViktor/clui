@@ -14,3 +14,33 @@
 
 .layout-content
   flex: 1
+
+.active-project
+  //border-left: 3px solid green
+  background-color: rgba(131, 131, 131, 0.17)
+
+
+  //background: rgba(147, 231, 151, 0.15)
+
+
+.list-item
+  border-left: 4px solid transparent
+
+  &.running-project
+    border-left: 4px solid green
+
+  &-content
+    padding: 8px
+    cursor: pointer
+
+  &-link
+    font-weight: 600
+    padding: 4px 2px
+
+  &-action
+    width: 28px
+    height: 28px
+    padding: 2px
+
+    &:disabled
+      opacity: .3

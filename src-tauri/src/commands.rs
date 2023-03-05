@@ -1,5 +1,5 @@
 use std::sync::atomic::Ordering;
-use tauri::{command, Window};
+use tauri::{Window};
 use tokio::runtime::Handle;
 use crate::cli::{ProjectId, Projects};
 use crate::event::ApplicationEvent;

@@ -13,6 +13,7 @@ export class ProjectService {
   private projects: BehaviorSubject<Cmd[]> = new BehaviorSubject<Cmd[]>([]);
   readonly projects$ = this.projects.asObservable();
   private outputSources: Map<number, BehaviorSubject<string[]>> = new Map();
+  private _activeProjectId?: number;
 
   initialize(processes: Cmd[]) {
     if (this.initialized) {
@@ -21,7 +22,19 @@ export class ProjectService {
 
     this.initialized = true;
     processes.forEach(({id}) => this.outputSources.set(id, new BehaviorSubject<string[]>([])));
+    if (processes.length > 0) {
+      this._activeProjectId = processes[0].id;
+    }
+
     this.projects.next(processes);
+  }
+
+  get activeProject() {
+    return this._activeProjectId as number;
+  }
+
+  set activeProject(id: number) {
+    this._activeProjectId = id;
   }
 
   projectSource(id: number): Observable<string[]> {
@@ -50,6 +63,7 @@ export class ProjectService {
         break;
       case 'Data':
         const [id, data] = payload;
+        // console.log('handle data event', id, data);
         const outputSource = this.outputSources.get(id) as BehaviorSubject<string[]>;
         let output = outputSource.value;
         output.push(data);
@@ -58,7 +72,7 @@ export class ProjectService {
           output = output.slice(output.length - 500)
         }
 
-        console.log('next data pushed', output);
+        // console.log('next data pushed', output);
         outputSource.next(output);
         break;
     }
