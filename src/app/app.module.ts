@@ -9,11 +9,14 @@ import { invoke } from "@tauri-apps/api/tauri";
   declarations: [AppComponent],
   imports: [BrowserModule],
   providers: [
-    CliService,
     {
       provide: APP_INITIALIZER,
       useFactory: (cliService: CliService) => {
-        return cliService.initialize;
+        return async () => {
+          const processes = (await invoke<any[]>('initialize')).map(
+            ({id, name, executable, workdir, is_running: isRunning}) => ({id, name, executable, workdir, isRunning}));
+          cliService.initialize(processes);
+        };
       },
       deps: [CliService],
       multi: true,

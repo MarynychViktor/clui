@@ -1,18 +1,25 @@
-import { Injectable } from "@angular/core";
+import { Injectable, NgZone } from "@angular/core";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Cmd } from "./command";
 
 const CMD_INIT_ENDPOINT = 'initialize'
 
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
 export class CliService {
   private cliProcesses: Cmd[] = [];
+  private initialized = false;
 
-  async initialize() {
-    await invoke<{name: string, is_running: boolean}[]>(CMD_INIT_ENDPOINT).then((cmds) => {
-      console.log('command res', cmds);
-      this.cliProcesses = cmds.map(({name, is_running: isRunning}) => ({name, isRunning}))
-      console.log('command res', this.cliProcesses);
-    });
+  get processes() {
+    return this.cliProcesses;
+  }
+
+  initialize(processes: Cmd[]) {
+    if (this.initialized) {
+      throw new Error("Already initialized");
+    }
+    this.initialized = true;
+    this.cliProcesses = processes;
   }
 }

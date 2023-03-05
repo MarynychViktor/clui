@@ -8,15 +8,13 @@
       <img src="/assets/angular.svg" class="logo angular" alt="Angular logo" />
     </a>
   </div>
-  <p>Click on the logos to learn more about the frameworks</p>
-  <div class="row">
-    <form (submit)="greet($event, greetInput.value)">
-      <input #greetInput id="greet-input" placeholder="Enter a name..." />
-      <button type="submit">Greet</button>
-    </form>
+  <div>
+    <ul>
+      <li *ngFor="let process of projectService.processes">
+        <span>Name: {{ process.name }}</span>
+        <span>Id: {{ process.id }}</span>
+        <button (click)="spawn(process)">Spawn</button>
+      </li>
+    </ul>
   </div>
-  <p>{{ greetingMessage }}</p>
-  <button (click)="spawn()">
-    Spawn
-  </button>
 </div>

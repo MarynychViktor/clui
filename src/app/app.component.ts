@@ -1,6 +1,8 @@
 import { Component, OnInit } from "@angular/core";
 import { invoke } from "@tauri-apps/api/tauri";
 import { listen } from "@tauri-apps/api/event";
+import { CliService } from "./cli.service";
+import { Cmd } from "./command";
 
 @Component({
   selector: "app-root",
@@ -8,26 +10,19 @@ import { listen } from "@tauri-apps/api/event";
   styleUrls: ["./app.component.css"],
 })
 export class AppComponent implements OnInit {
-  greetingMessage = "";
 
-  greet(event: SubmitEvent, name: string): void {
-    event.preventDefault();
-
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    invoke<string>("greet", { name }).then((text) => {
-      this.greetingMessage = text;
-    });
+  constructor(readonly projectService: CliService) {
   }
 
-  spawn() {
-    invoke<string>("spawn").then(res => {
+  spawn(process: Cmd) {
+    console.log('spawning ', process.name);
+    invoke<string>("spawn", { id: process.id }).then(res => {
       console.error('spawn result' ,res);
     })
   }
 
   ngOnInit(): void {
-    console.log('started listener');
-    listen("data-event", event => {
+    listen("events", event => {
       console.log("event listener ", event);
     }).then(res => {
       console.log('listen res');

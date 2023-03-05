@@ -1,19 +1,77 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use tauri::{Manager, Window};
 use tokio::runtime::Handle;
-use clui::cli::{Project, Descriptor, Projects};
-
+use clui::cli::{Descriptor, Projects, ProjectId, Project};
+use clui::commands::{ProjectDto};
+use clui::event::ApplicationEvent;
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
   message: String,
 }
 
+#[derive(Clone, serde::Serialize)]
+enum Event {
+  Start(ProjectId),
+  Data(ProjectId, String),
+  Exit(ProjectId),
+}
+
+#[tauri::command]
+fn initialize(projects: tauri::State<'_, Projects>) -> Vec<ProjectDto> {
+  projects.iter().map(|(a, b)| {
+    ProjectDto {
+      id: a.clone(),
+      name: b.name.clone(),
+      executable: b.executable.clone(),
+      workdir: b.workdir.clone(),
+      is_running: b.is_running.load(Ordering::Relaxed),
+    }
+  })
+    .collect()
+}
+
+#[tauri::command]
+async fn spawn(id: ProjectId, projects: tauri::State<'_, Projects>, window: Window) -> Result<(), ()> {
+  let project = projects.get(&id).unwrap().clone();
+
+  let handle = Handle::current();
+  let mut receiver = project.spawn();
+
+  std::thread::spawn(move || {
+    handle.spawn(async move {
+      window.emit("events", ApplicationEvent::Start(id)).unwrap();
+
+      while let Some(data) = receiver.recv().await {
+        println!("Data received {}", data);
+        window.emit("events", ApplicationEvent::Data(id, data)).unwrap();
+      }
+
+      window.emit("events", ApplicationEvent::Exit(id)).unwrap();
+    });
+  });
+
+  Ok(())
+}
+
 #[tokio::main]
 async fn main() {
-  let projects = Projects::new();
+  let data = std::fs::read_to_string("/home/vmaryn/projects/tauri/clui/config.json").unwrap();
+  let descriptors: Vec<Descriptor> = serde_json::from_str(data.as_str()).unwrap();
+  let mut projects = Projects::new();
+
+  descriptors.iter().enumerate().for_each(|(idx, desc)| {
+    projects.insert(idx as ProjectId, Arc::new(Project::new(
+      desc.name.clone(),
+      desc.executable.clone(),
+      desc.workdir.clone(),
+    )));
+  });
+
   tauri::Builder::default()
     .setup(|app| {
       let main_window = app.get_window("main").unwrap();
