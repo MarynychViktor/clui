@@ -2,6 +2,7 @@ import { Component, NgZone, OnDestroy, OnInit } from "@angular/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import { ProjectService } from "./project.service";
 import { Subscription } from "rxjs";
+import { Router } from "@angular/router";
 
 @Component({
   selector: "app-root",
@@ -11,7 +12,7 @@ import { Subscription } from "rxjs";
 export class AppComponent implements OnInit, OnDestroy {
   private unsubscribe?: UnlistenFn;
 
-  constructor(readonly projectService: ProjectService, private zone: NgZone) {
+  constructor(readonly projectService: ProjectService, private zone: NgZone, private router: Router) {
   }
 
   ngOnInit(): void {
@@ -25,6 +26,10 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     })
       .catch((e) => console.error('Failed to subscribe to the event source'));
+
+    if (this.projectService.activeProject) {
+      this.router.navigate(['/', this.projectService.activeProject]);
+    }
   }
 
   ngOnDestroy(): void {

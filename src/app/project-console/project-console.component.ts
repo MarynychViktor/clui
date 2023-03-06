@@ -1,4 +1,4 @@
-import { Component, NgZone, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { ProjectService } from "../project.service";
@@ -30,14 +30,11 @@ export class ProjectConsoleComponent implements OnInit {
 
   constructor(
     readonly projectService: ProjectService,
-    private route: ActivatedRoute,
-    private ngZone: NgZone
+    private route: ActivatedRoute
   ) {
-
   }
 
   ngOnInit() {
-
     this.subscription = this.route.params.pipe(
       map((params) => parseInt(params['id'])),
       tap((id) => {
@@ -60,7 +57,7 @@ export class ProjectConsoleComponent implements OnInit {
       switchMap((id) => this.projectService.projectSource(id)),
     )
       .subscribe((buff: string[]) => {
-        this.term.write(buff.join("\r\n"))
+        this.term.writeln(buff.join("\r\n"))
         this.term.scrollToBottom();
       });
 

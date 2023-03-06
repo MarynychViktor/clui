@@ -2,7 +2,6 @@ import { Injectable } from "@angular/core";
 import { Cmd } from "./command";
 import { BehaviorSubject, filter, interval, map, merge, Observable, of, ReplaySubject, retry, Subject } from "rxjs";
 
-const CMD_INIT_ENDPOINT = 'initialize'
 const PROJECT_OUT_MAX_LEN = 2000;
 const PROCESS_UPDATE_INTERVAL = 200;
 
@@ -84,11 +83,14 @@ export class ProjectService {
         if (output.length > PROJECT_OUT_MAX_LEN) {
           output.splice(0, output.length - Math.floor(PROJECT_OUT_MAX_LEN / 2));
         }
+
         this.outputSources.set(id, output);
 
-        const buff = this.projectsBuffer.get(id) as string[];
-        buff.push(data);
-        this.projectsBuffer.set(id, buff);
+        if (this.activeProject == id) {
+          const buff = this.projectsBuffer.get(id) as string[];
+          buff.push(data);
+          this.projectsBuffer.set(id, buff);
+        }
         break;
     }
   }
