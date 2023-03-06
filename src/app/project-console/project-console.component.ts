@@ -57,8 +57,16 @@ export class ProjectConsoleComponent implements OnInit {
       switchMap((id) => this.projectService.projectSource(id)),
     )
       .subscribe((buff: string[]) => {
-        this.term.writeln(buff.join("\r\n"))
-        this.term.scrollToBottom();
+        const {baseY, viewportY} = this.term.buffer.active;
+        const shouldScroll = baseY ===  viewportY;
+
+        if (buff.length) {
+          this.term.write(`${buff.join("\r\n")}\r\n`);
+        }
+
+        if (shouldScroll) {
+          this.term.scrollToBottom();
+        }
       });
 
     this.resizeSub = merge(this.resize, interval(500))
@@ -77,8 +85,8 @@ export class ProjectConsoleComponent implements OnInit {
     this.term = new Terminal({
       allowTransparency: false,
       fontFamily: 'Roboto Mono',
-      fontSize: 14,
-      scrollback: 1000,
+      fontSize: 15,
+      scrollback: 2000,
       disableStdin: true,
       convertEol: false,
     });
@@ -86,5 +94,6 @@ export class ProjectConsoleComponent implements OnInit {
     this.term.open(document.getElementById('term') as HTMLElement);
     this.fitAddon = new FitAddon();
     this.term.loadAddon(this.fitAddon);
+
   }
 }
