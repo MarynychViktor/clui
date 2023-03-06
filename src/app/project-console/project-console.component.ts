@@ -1,9 +1,18 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { ProjectService } from "../project.service";
-import { WebglAddon } from "xterm-addon-webgl";
-import { debounce, interval, map, merge, Subject, Subscription, switchMap, tap, throttle } from "rxjs";
+import {
+  debounce, delay,
+  interval,
+  map,
+  merge,
+  Subject,
+  Subscription,
+  switchMap,
+  tap,
+  throttle,
+} from "rxjs";
 import { ActivatedRoute } from "@angular/router";
 
 @Component({
@@ -11,57 +20,74 @@ import { ActivatedRoute } from "@angular/router";
   templateUrl: './project-console.component.html',
   styleUrls: ['./project-console.component.sass']
 })
-export class ProjectConsoleComponent implements AfterViewInit {
-  term = new Terminal();
+export class ProjectConsoleComponent implements OnInit {
+  // @ts-ignore
+  term: Terminal;
   fitAddon?: FitAddon;
-  webglAddon?: WebglAddon;
   private resize = new Subject();
   private resizeSub?: Subscription;
+  private subscription?: Subscription;
 
   constructor(
     readonly projectService: ProjectService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private ngZone: NgZone
   ) {
-    this.term = new Terminal();
-    this.fitAddon = new FitAddon();
-    this.term.loadAddon(this.fitAddon);
-    this.fitAddon.activate(this.term);
-    this.webglAddon = new WebglAddon();
-    this.term.loadAddon(this.webglAddon);
-    this.webglAddon.activate(this.term);
+
   }
 
-  ngAfterViewInit(){
-    this.term.open(document.getElementById('term') as HTMLElement);
-    window.onresize = () => { this.resize.next(null) };
-    this.term.onResize((evt) => this.fitAddon?.fit());
+  ngOnInit() {
 
-    this.route.params.pipe(
+    this.subscription = this.route.params.pipe(
       map((params) => parseInt(params['id'])),
-      tap((id) => this.projectService.activeProject = id),
-      switchMap((id) => this.projectService.projectSource(id)),
-      // todo: config
-      debounce(() => interval(200)),
-      throttle(() => interval(200)),
-    )
-      .subscribe((data: string[]) => {
-        console.log('ngAfterViewInit subscribe', data);
-          this.term.clear();
-          data.forEach((line) => {
-            this.term.writeln(line);
-          });
-        });
+      tap((id) => {
+        this.term?.clear();
+        this.term?.dispose();
+        setTimeout(() => this.projectService.activeProject = id)
+      }),
+      delay(50),
+      tap(() => {
+        this.setUpTerm();
+        this.fitAddon?.fit();
 
-    // todo: values to config
-    this.resizeSub = merge(this.resize, interval(1000))
+        window.onresize = () => { this.resize.next(null); };
+        this.term.onResize((evt) => this.fitAddon?.fit());
+      }),
+      tap(() => {
+        this.term.clear();
+        this.term.reset();
+      }),
+      switchMap((id) => this.projectService.projectSource(id)),
+    )
+      .subscribe((buff: string[]) => {
+        this.term.write(buff.join("\r\n"))
+        this.term.scrollToBottom();
+      });
+
+    this.resizeSub = merge(this.resize, interval(500))
       .pipe(
-        debounce(() => interval(200)),
-        throttle(() => interval(200)),
+        debounce(() => interval(150)),
+        throttle(() => interval(150)),
       )
       .subscribe(() => {
         if (this.term && this.fitAddon) {
           this.fitAddon.fit();
         }
       });
+  }
+
+  private setUpTerm() {
+    this.term = new Terminal({
+      allowTransparency: false,
+      fontFamily: 'Roboto Mono',
+      fontSize: 14,
+      scrollback: 1000,
+      disableStdin: true,
+      convertEol: false,
+    });
+    this.term.attachCustomKeyEventHandler(function () {return false})
+    this.term.open(document.getElementById('term') as HTMLElement);
+    this.fitAddon = new FitAddon();
+    this.term.loadAddon(this.fitAddon);
   }
 }

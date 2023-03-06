@@ -8,7 +8,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
-import { NgTerminalModule } from "ng-terminal";
 import { ProjectsComponent } from './projects/projects.component';
 import { ProjectConsoleComponent } from './project-console/project-console.component';
 import { RouterModule } from "@angular/router";
@@ -25,7 +24,6 @@ import { MatBadgeModule } from "@angular/material/badge";
     MatSidenavModule,
     MatButtonModule,
     MatIconModule,
-    NgTerminalModule,
     RouterModule.forRoot([
       {
         path: '',

@@ -41,8 +41,8 @@
         "fullscreen": false,
         "resizable": true,
         "title": "clui",
-        "width": 800,
-        "height": 600,
+        "width": 1400,
+        "height": 900,
         "theme": "Light"
       }
     ]

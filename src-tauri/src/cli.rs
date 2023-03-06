@@ -48,6 +48,7 @@ impl Project {
 
     let mut child = Command::new("/bin/bash")
       .kill_on_drop(true)
+      .arg("-l")
       .arg("-c")
       .arg(self.executable.as_str())
       .current_dir(self.workdir.as_str())

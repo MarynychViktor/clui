@@ -18,7 +18,6 @@ export class AppComponent implements OnInit, OnDestroy {
     listen("events", (event: any) => {
       this.zone.run(() => {
         const [type, payload] = Object.entries(event.payload)[0] as [k: string, payload: any[]];
-        console.log('event', type, payload);
         this.projectService.handleEvent({
           type,
           payload

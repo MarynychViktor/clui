@@ -9,20 +9,10 @@ import { ActivatedRoute, NavigationEnd, Router, Routes } from "@angular/router";
   templateUrl: './projects.component.html',
   styleUrls: ['./projects.component.sass']
 })
-export class ProjectsComponent implements OnInit {
+export class ProjectsComponent {
   constructor(
-    readonly projectService: ProjectService,
-    private router: Router
+    readonly projectService: ProjectService
   ) {
-  }
-
-  ngOnInit() {
-    this.router.events.subscribe(e => {
-      if (e instanceof NavigationEnd) {
-        console.log('event', e.url)
-      }
-    });
-    // this.activeRoute.params.subscribe(p => console.log('xxxx', p));
   }
 
   spawn(process: Cmd) {

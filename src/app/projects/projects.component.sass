@@ -1,5 +1,5 @@
 .layout-container
-  position: absolute
+  //position: absolute
   top: 0
   bottom: 0
   left: 0
@@ -30,17 +30,23 @@
     border-left: 4px solid green
 
   &-content
-    padding: 8px
     cursor: pointer
 
   &-link
     font-weight: 600
-    padding: 4px 2px
+    padding: 12px 10px 6px
+    outline: none
+
+    &:focus
+      outline: none
+      border: none
+  &-actions
+    padding-left: 8px
 
   &-action
     width: 28px
     height: 28px
-    padding: 2px
+    padding: 2px 2px 8px
 
     &:disabled
       opacity: .3
